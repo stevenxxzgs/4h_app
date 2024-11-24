@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import OpenAI from "openai";
+// 导入所需的 Lucide 图标
+import { MapPin } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 const openai = new OpenAI({
   apiKey: "sk-e6387b460bc047138c629f3e293fa449",
@@ -150,63 +155,73 @@ const TravelGuideApp = () => {
       setLoading(false);
     }
   };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">巴厘岛美食地图生成器</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">旅游地图生成器</h1>
+          <p className="text-lg text-gray-600">输入文章内容，一键生成个性化旅游地图</p>
+        </div>
+
+        {/* Input Section */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <textarea
                 value={textContent}
                 onChange={(e) => setTextContent(e.target.value)}
-                placeholder="请粘贴美食文章内容..."
-                className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500 min-h-[200px]"
+                placeholder="请粘贴文章内容..."
+                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[200px] text-gray-700"
               />
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
-                {error}
+              <div className="flex items-center gap-2 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+                <p className="text-red-700">{error}</p>
               </div>
             )}
 
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50"
-              >
-                生成美食地图
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-6 rounded-xl font-medium shadow-lg transform transition duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? '生成中...' : '生成地图'}
+            </button>
           </form>
         </div>
 
-        {loading ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent mx-auto"></div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+            <div className="w-full bg-gray-200 rounded-full h-3 mt-6 overflow-hidden">
               <div 
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" 
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500" 
                 style={{ width: `${processing.progress}%` }}
               ></div>
             </div>
-            <p className="mt-4 text-gray-600">
+            <p className="mt-4 text-lg font-medium text-gray-700">
               {processing.step === 'summary' && '正在分析美食信息...'}
               {processing.step === 'structure' && '正在规划行程路线...'}
               {processing.step === 'complete' && '处理完成！'}
             </p>
           </div>
-        ) : (
+        )}
+
+        {/* Results Section */}
+        {!loading && (
           <>
             {summary && (
-              <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-3">美食游览建议</h3>
-                <div className="prose prose-blue max-w-none">
+              <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+                  游览建议
+                </h3>
+                <div className="prose prose-lg prose-blue max-w-none">
                   {summary.split('\n').map((line, index) => (
-                    <p key={index} className="text-gray-600">
+                    <p key={index} className="text-gray-700 leading-relaxed">
                       {line}
                     </p>
                   ))}
@@ -215,54 +230,80 @@ const TravelGuideApp = () => {
             )}
 
             {guideData && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">{guideData.destination.name} 美食地图</h2>
-                  <p className="text-gray-600">{guideData.destination.overview}</p>
+              <div className="space-y-8">
+                {/* Destination Overview */}
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="flex-1">
+                      <h2 className="text-3xl font-bold text-gray-900">{guideData.destination.name} 美食地图</h2>
+                      <p className="mt-2 text-lg text-gray-600">{guideData.destination.overview}</p>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Daily Schedule */}
                 {guideData.days.map((day, dayIndex) => (
-                  <div key={dayIndex} className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">第 {day.day} 天</h3>
-                    <div className="space-y-6">
+                  <div key={dayIndex} className="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+                      第 {day.day} 天行程
+                    </h3>
+                    <div className="space-y-8">
                       {Array.isArray(day.schedule) && day.schedule.length > 0 ? (
                         day.schedule.map((item, itemIndex) => (
-                          <div key={itemIndex} className="border-l-4 border-blue-500 pl-4">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          <div key={itemIndex} className="relative pl-6 border-l-2 border-blue-500">
+                            <div className="mb-4">
+                              <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full mb-2">
                                 {item.time || '时间未指定'}
                               </span>
-                              <h4 className="font-semibold text-gray-800">{item.restaurant}</h4>
+                              <h4 className="text-xl font-bold text-gray-900">{item.restaurant}</h4>
                             </div>
-                            <div className="mt-2 space-y-1 text-sm">
-                              <p className="text-gray-600">📍 地址：{item.address || '地址未提供'}</p>
-                              <div className="flex flex-wrap gap-2 my-2">
+                            
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-2 text-gray-600">
+                                <MapPin className="w-5 h-5 mt-1 flex-shrink-0" />
+                                <p>{item.address || '地址未提供'}</p>
+                              </div>
+                              
+                              <div className="flex gap-2 flex-wrap mt-3">
                                 {Array.isArray(item.dishes) && item.dishes.map((dish, dishIndex) => (
-                                  <span key={dishIndex} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
+                                  <span key={dishIndex} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
                                     {dish}
                                   </span>
                                 ))}
                               </div>
-                              <p className="text-gray-600">⏰ 营业时间：{item.opening_hours || '未提供'}</p>
-                              <p className="text-gray-600">💡 提示：{item.tips || '无特别提示'}</p>
+                              
+                              <div className="flex items-start gap-2 text-gray-600">
+                                <Clock className="w-5 h-5 mt-1 flex-shrink-0" />
+                                <p>{item.opening_hours || '营业时间未提供'}</p>
+                              </div>
+                              
+                              {item.tips && (
+                                <div className="flex items-start gap-2 text-gray-600">
+                                  <AlertCircle className="w-5 h-5 mt-1 flex-shrink-0" />
+                                  <p>{item.tips}</p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <p className="text-gray-500 italic">暂无行程安排</p>
+                        <p className="text-gray-500 italic text-center">暂无行程安排</p>
                       )}
                     </div>
                   </div>
                 ))}
 
-                {guideData.tips && (
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">美食贴士</h3>
-                    <div className="space-y-2">
+                {/* Tips Section */}
+                {guideData.tips && guideData.tips.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+                      美食贴士
+                    </h3>
+                    <div className="grid gap-4">
                       {guideData.tips.map((tip, index) => (
-                        <div key={index} className="flex items-start gap-2">
-                          <span className="mt-1 text-yellow-500">•</span>
-                          <p className="text-gray-600">{tip.content}</p>
+                        <div key={index} className="flex items-start gap-3 p-4 bg-yellow-50 rounded-xl">
+                          <ChevronRight className="w-5 h-5 text-yellow-500 mt-1 flex-shrink-0" />
+                          <p className="text-gray-700">{tip.content}</p>
                         </div>
                       ))}
                     </div>
