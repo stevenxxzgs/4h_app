@@ -18,7 +18,7 @@ const parseHtmlFile = async (htmlFile) => {
 };
 
 const openai = new OpenAI({
-  apiKey: "sk-e6387b460bc047138c629f3e293fa449",
+  apiKey: ,
   baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
   dangerouslyAllowBrowser: true 
 });
