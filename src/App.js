@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Clock, AlertCircle, ChevronRight } from 'lucide-react';
 import OpenAI from "openai";
-// 导入所需的 Lucide 图标
-import { MapPin } from 'lucide-react';
-import { Clock } from 'lucide-react';
-import { AlertCircle } from 'lucide-react';
-import { ChevronRight } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+const parseHtmlFile = async (htmlFile) => {
+  try {
+    // 读取HTML文件内容
+    const response = await window.fs.readFile(htmlFile, { encoding: 'utf8' });
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(response, 'text/html');
+    return doc;
+  } catch (error) {
+    console.error('Error parsing HTML file:', error);
+    return null;
+  }
+};
 
 const openai = new OpenAI({
   apiKey: "sk-e6387b460bc047138c629f3e293fa449",
@@ -13,7 +24,7 @@ const openai = new OpenAI({
 });
 
 const TravelGuideApp = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); 
   const [summary, setSummary] = useState('');
   const [guideData, setGuideData] = useState(null);
   const [error, setError] = useState('');
@@ -127,6 +138,7 @@ const TravelGuideApp = () => {
     }
   };
 
+  
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!textContent) {
@@ -214,20 +226,61 @@ const TravelGuideApp = () => {
         {/* Results Section */}
         {!loading && (
           <>
-            {summary && (
-              <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
-                  游览建议
-                </h3>
-                <div className="prose prose-lg prose-blue max-w-none">
-                  {summary.split('\n').map((line, index) => (
-                    <p key={index} className="text-gray-700 leading-relaxed">
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
+                      
+        {summary && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+              游览建议
+            </h3>
+            <div className="prose prose-lg prose-blue max-w-none">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  // 自定义各种 markdown 元素的样式
+                  h1: ({node, ...props}) => <h1 className="text-3xl font-bold my-4" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-2xl font-bold my-3" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-xl font-bold my-2" {...props} />,
+                  p: ({node, ...props}) => <p className="text-gray-700 leading-relaxed my-2" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc list-inside my-2" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal list-inside my-2" {...props} />,
+                  li: ({node, ...props}) => <li className="my-1" {...props} />,
+                  a: ({node, ...props}) => (
+                    <a 
+                      className="text-blue-600 hover:text-blue-800 underline" 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      {...props} 
+                    />
+                  ),
+                  blockquote: ({node, ...props}) => (
+                    <blockquote 
+                      className="border-l-4 border-gray-200 pl-4 my-2 italic text-gray-600" 
+                      {...props} 
+                    />
+                  ),
+                  code: ({node, inline, ...props}) => (
+                    inline ? 
+                      <code className="bg-gray-100 rounded px-1 py-0.5" {...props} /> :
+                      <code className="block bg-gray-100 rounded p-4 my-2 overflow-x-auto" {...props} />
+                  ),
+                  table: ({node, ...props}) => (
+                    <div className="overflow-x-auto my-4">
+                      <table className="min-w-full divide-y divide-gray-200" {...props} />
+                    </div>
+                  ),
+                  th: ({node, ...props}) => (
+                    <th className="px-4 py-2 bg-gray-50 text-left text-gray-600" {...props} />
+                  ),
+                  td: ({node, ...props}) => (
+                    <td className="px-4 py-2 border-t" {...props} />
+                  ),
+                }}
+              >
+                {summary}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
 
             {guideData && (
               <div className="space-y-8">
@@ -241,57 +294,63 @@ const TravelGuideApp = () => {
                   </div>
                 </div>
 
-                {/* Daily Schedule */}
+                {/* Daily Schedule
                 {guideData.days.map((day, dayIndex) => (
                   <div key={dayIndex} className="bg-white rounded-2xl shadow-xl p-8">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-8">
                       第 {day.day} 天行程
                     </h3>
-                    <div className="space-y-8">
+                    <div className="grid gap-8">
                       {Array.isArray(day.schedule) && day.schedule.length > 0 ? (
                         day.schedule.map((item, itemIndex) => (
-                          <div key={itemIndex} className="relative pl-6 border-l-2 border-blue-500">
-                            <div className="mb-4">
-                              <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full mb-2">
+                          <div key={itemIndex} className="bg-gray-50 rounded-xl p-6 transform transition duration-300 hover:shadow-lg">
+                            <div className="flex items-center justify-between mb-4">
+                              <span className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm">
                                 {item.time || '时间未指定'}
                               </span>
-                              <h4 className="text-xl font-bold text-gray-900">{item.restaurant}</h4>
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-gray-400" />
+                                <span className="text-sm text-gray-600">{item.opening_hours || '营业时间未提供'}</span>
+                              </div>
                             </div>
                             
-                            <div className="space-y-3">
-                              <div className="flex items-start gap-2 text-gray-600">
-                                <MapPin className="w-5 h-5 mt-1 flex-shrink-0" />
-                                <p>{item.address || '地址未提供'}</p>
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="text-xl font-bold text-gray-900 mb-2">{item.restaurant}</h4>
+                                <div className="flex items-start gap-2 text-gray-600">
+                                  <MapPin className="w-5 h-5 mt-1 flex-shrink-0 text-gray-400" />
+                                  <p className="text-sm">{item.address || '地址未提供'}</p>
+                                </div>
                               </div>
                               
-                              <div className="flex gap-2 flex-wrap mt-3">
-                                {Array.isArray(item.dishes) && item.dishes.map((dish, dishIndex) => (
-                                  <span key={dishIndex} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    {dish}
-                                  </span>
-                                ))}
-                              </div>
-                              
-                              <div className="flex items-start gap-2 text-gray-600">
-                                <Clock className="w-5 h-5 mt-1 flex-shrink-0" />
-                                <p>{item.opening_hours || '营业时间未提供'}</p>
+                              <div className="pt-2">
+                                <div className="text-sm font-medium text-gray-600 mb-2">推荐美食：</div>
+                                <div className="flex gap-2 flex-wrap">
+                                  {Array.isArray(item.dishes) && item.dishes.map((dish, dishIndex) => (
+                                    <span key={dishIndex} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg text-sm font-medium">
+                                      {dish}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                               
                               {item.tips && (
-                                <div className="flex items-start gap-2 text-gray-600">
-                                  <AlertCircle className="w-5 h-5 mt-1 flex-shrink-0" />
-                                  <p>{item.tips}</p>
+                                <div className="mt-4 bg-blue-50 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <AlertCircle className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" />
+                                    <p className="text-sm text-gray-700">{item.tips}</p>
+                                  </div>
                                 </div>
                               )}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <p className="text-gray-500 italic text-center">暂无行程安排</p>
+                        <p className="text-gray-500 italic text-center py-8">暂无行程安排</p>
                       )}
                     </div>
                   </div>
-                ))}
+                ))} */}
 
                 {/* Tips Section */}
                 {guideData.tips && guideData.tips.length > 0 && (
